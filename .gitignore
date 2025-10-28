@@ -1,0 +1,15 @@
+# General RStudio
+.Rproj.user
+.Rhistory
+.RData
+.Ruserdata
+
+# Data formats
+*.rds
+*.tif
+*.tiff
+*.nc
+
+# Project data dirs (ignore everything inside)
+**/Data/**
+**/data/**
