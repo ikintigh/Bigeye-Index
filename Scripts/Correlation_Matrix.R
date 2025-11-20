@@ -15,6 +15,8 @@ library(stringr)
 
 DSLL_Data_Bigeye <- readRDS(here("Data", "DSLL_Data_Bigeye.rds"))
 
+DSLL_Bigeye <- readRDS(here("Data", "DSLL_Bigeye_O2_SLA.rds"))
+
 # ---------------------- Pick wanted variables -------------------------
 
 vars_for_corr <- c("sss", 
@@ -29,9 +31,11 @@ vars_for_corr <- c("sss",
                    "lunar_rad", 
                    "chl_cop",
                    "ssh_sd",
-                   "current_speed")
+                   "current_speed",
+                   "o2",
+                   "sla")
 
-dat_num <- DSLL_Data_Bigeye %>%
+dat_num <- DSLL_Bigeye %>%
   select(all_of(vars_for_corr)) %>%
   mutate(across(everything(), as.numeric))  # in case any are factors
 
@@ -84,10 +88,15 @@ ggsave(here("Output", "Bigeye_Correlation_Matrix.png"),
        dpi = 600)
 
 
+ggplot(DSLL_Bigeye, aes(x = sst, 
+                        y = o2,
+                        color = cent_lat)) +
+  geom_point() +
+  scale_color_viridis_c()
+## Try to include both in the same model and see what happens, if there are issues include SLA instead of ssh, include o2 not salinity for all species 
+# Subsurface dynamics look into, interaction term potentially for subsurface temp and oxygen, look into tagging data (we know we don't really catch them deeper than 100), so what layer am I going to use 
 
 
-
-
-
+# Temp and oxygen aren't that correlated so can use temp at 150 
 
 

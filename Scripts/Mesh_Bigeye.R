@@ -46,13 +46,15 @@ DSLL_Bigeye_df <- as.data.frame(DSLL_Bigeye_sf)
 mesh <- make_mesh(DSLL_Bigeye_df,
                   xy_cols = c("x", "y"),
 
-# This is the minimum allowed spacing detween mesh vertices and controls how dense the mesh is, smaller cutoff means more trianges which means finer detail but a slower model, start woith about 50 km
+# This is the minimum allowed spacing between mesh vertices and controls how dense the mesh is, smaller cutoff means more triangles which means finer detail but a slower model, start woith about 50 km
                   cutoff = 0.5, 
 
 # This sets the largest allowed triangle side lengths with the first value being the typical edge length inside the data-dense area, and the second being the maximum edge length around the outer boundary. The outer triangles can be bigger because we don't need fine detail in empty ocean around polygon.
                   mesh_args = list(max_edge = c(1,5))) # inner, outer triangles in degrees
 
 # ------------------------ Check number of vertices ---------------------------
+
+## Maybe look into making mesh more coarse
 
 mesh$mesh$n    # number of mesh vertices
 
