@@ -15,7 +15,7 @@ library(sdmTMBextra)
 
 # ----------------------------- Load in dfs -----------------------------------
 
-DSLL_Bigeye <- readRDS(here("Data", "DSLL_Bigeye_O2_SLA.rds"))
+DSLL_Bigeye <- readRDS(here("Data", "DSLL_Bigeye_df.rds"))
 mesh <- readRDS(here("Data", "mesh_dsll_bigeye.rds"))
 effort_poly <- readRDS(here("Data", "Effort_90pct_Bigeye_DSLL.rds"))
 fit_envOFF <- readRDS(here("Data", "fit_envOFF_bigeye.rds"))
@@ -30,33 +30,6 @@ DSLL_Bigeye <- DSLL_Bigeye %>%
     brnchln_mat_code_val = as.factor(brnchln_mat_code_val)
   )
 
-### Including this portion from the mesh script so that the data is the same that we built the mesh from
-
-# Convert to sf points
-DSLL_Bigeye_sf <- st_as_sf(DSLL_Bigeye,
-                           coords = c("cent_lon", "cent_lat"),
-                           crs = 4326)
-
-# Crop points to inside the 90% polygon
-DSLL_Bigeye_sf <- st_intersection(DSLL_Bigeye_sf, effort_poly)
-
-# Recreate explicit x/y columns from the geometry
-coords <- st_coordinates(DSLL_Bigeye_sf)
-
-# Shift negative longitudes to 0–360
-coords[, "X"] <- ifelse(coords[, "X"] < 0, coords[, "X"] + 360, coords[, "X"])
-
-DSLL_Bigeye_sf <- DSLL_Bigeye_sf %>%
-  mutate(x = coords[, "X"],
-         y = coords[, "Y"])
-
-# Make it a dataframe
-
-DSLL_Bigeye_df <- as.data.frame(DSLL_Bigeye_sf)
-
-# Make sure there are no explicit zeros 
-
-DSLL_Bigeye_df$cpue <- ifelse(DSLL_Bigeye_df$cpue <= 0, 0.0001, DSLL_Bigeye_df$cpue)
 
 
 # ----------------------------- Model Formula ---------------------------------
@@ -65,9 +38,8 @@ formula_envOFF <- cpue ~
   year + # time trend
   bait_code_val + # gear covariate
   ldr_mat_code_val + # leader material
-  brnchln_mat_code_val + # branchline material #### Can get rid 
-  brnchln_len + # depth proxy ### Include floatline len rather than branch line 
-  s(DOY, k = 5) # smooth for seasonality # Add bs = cc 
+  fltln_len + # have to separate branchline and floatline because they were too correlated
+  s(DOY, bs = "cc", k = 4) # smooth for seasonality # Add bs = cc 
 
 # ------------------------ Fit Environment-OFF Model ---------------------------
 
@@ -101,6 +73,31 @@ plot(DSLL_Bigeye_df$fitted, DSLL_Bigeye_df$resid,
      xlab = "Fitted values", ylab = "Residuals",
      main = "Residuals vs Fitted (Environment-OFF Model)")
 abline(h = 0, col = "red")
+
+
+
+resid_log <- residuals(fit_envOFF, type = "deviance")
+
+plot(fitted(fit_envOFF), resid_log,
+     pch = 16, cex = 0.3, col = "grey60",
+     xlab = "Fitted (log scale)",
+     ylab = "Residuals (scaled log scale)",
+     main = "Residuals vs Fitted (Lognormal Model)")
+abline(h = 0, col = "red")
+
+# --------------------------- Extract indices -------------------------------
+
+pred_envOFF <- predict(
+  fit_envOFF,
+  newdata = DSLL_Bigeye_df,
+  return_tmb_object = TRUE
+)
+
+index_envOFF <- get_index(pred_envOFF, bias_correct = TRUE)
+
+# -------------------------------- Save -------------------------------------
+
+saveRDS(index_envOFF, here("Output", "index_envOFF_bigeye.rds"))
 
 
 

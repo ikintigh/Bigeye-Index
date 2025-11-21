@@ -41,6 +41,14 @@ DSLL_Bigeye_sf <- DSLL_Bigeye_sf %>%
 
 DSLL_Bigeye_df <- as.data.frame(DSLL_Bigeye_sf)
 
+# Make sure there are no explicit zeros 
+
+DSLL_Bigeye_df$cpue <- ifelse(DSLL_Bigeye_df$cpue <= 0, 0.0001, DSLL_Bigeye_df$cpue)
+
+# ---------------------------------- Save ------------------------------------
+
+saveRDS(DSLL_Bigeye_df, here("Data", "DSLL_Bigeye_df.rds"))
+
 # ------------------------------- Make mesh -----------------------------------
 
 mesh <- make_mesh(DSLL_Bigeye_df,
